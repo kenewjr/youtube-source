@@ -5,10 +5,10 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException.Severity;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
+import dev.lavalink.youtube.RemotePoToken;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.net.URISyntaxException;
-import java.util.Map;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,20 +26,6 @@ public class WebEmbedded extends Web {
         super(ClientOptions.DEFAULT);
     }
 
-    public static void setPoTokenAndVisitorData(String poToken, String visitorData) {
-        WebEmbedded.poToken = poToken;
-
-        if (poToken == null || visitorData == null) {
-            BASE_CONFIG.getRoot().remove("serviceIntegrityDimensions");
-            BASE_CONFIG.withVisitorData(null);
-            return;
-        }
-
-        Map<String, Object> sid = BASE_CONFIG.putOnceAndJoin(BASE_CONFIG.getRoot(), "serviceIntegrityDimensions");
-        sid.put("poToken", poToken);
-        BASE_CONFIG.withVisitorData(visitorData);
-    }
-
     @Override
     public boolean isEmbedded() {
         return true;
@@ -48,6 +34,13 @@ public class WebEmbedded extends Web {
     @Override
     @NotNull
     public URI transformPlaybackUri(@NotNull URI originalUri, @NotNull URI resolvedPlaybackUri) {
+        return resolvedPlaybackUri;
+    }
+
+    @Override
+    @NotNull
+    public URI transformPlaybackUri(@NotNull URI originalUri, @NotNull URI resolvedPlaybackUri,
+                                    @Nullable String poToken) {
         if (poToken == null) {
             return resolvedPlaybackUri;
         }
@@ -69,9 +62,32 @@ public class WebEmbedded extends Web {
     }
 
     @Override
+    public boolean supportsSabrPlayback() {
+        return false; //idk most likely not
+    }
+
+    @Override
+    public void preparePlayback(@NotNull YoutubeAudioSourceManager source,
+                                @NotNull HttpInterface httpInterface,
+                                @NotNull String videoId) throws java.io.IOException {
+        RemotePoToken.Result result = source.generatePoToken(httpInterface, null);
+        if (result != null) {
+            requestPoToken = result.getPoToken();
+            requestVisitorData = result.getContentBinding();
+        }
+    }
+
+    @Override
     @NotNull
     public ClientConfig getBaseClientConfig(@NotNull HttpInterface httpInterface) {
-        return BASE_CONFIG.copy();
+        ClientConfig config = BASE_CONFIG.copy();
+        if (requestVisitorData != null) {
+            config.withVisitorData(requestVisitorData);
+        }
+        if (requestPoToken != null) {
+            config.putOnceAndJoin(config.getRoot(), "serviceIntegrityDimensions").put("poToken", requestPoToken);
+        }
+        return config;
     }
     @Override
     @NotNull

@@ -180,7 +180,7 @@ public class YoutubeAudioTrack extends DelegatedAudioTrack {
 
     URI resolvedUrl = resolveSabrUrl(httpInterface, client, formats, format, serverAbrStreamingUrl);
     byte[] ustreamerBytes = decodeBase64(ustreamerConfig);
-    byte[] poTokenBytes = client.getPoToken() != null ? decodeBase64(client.getPoToken()) : null;
+    byte[] poTokenBytes = formats.getPoToken() != null ? decodeBase64(formats.getPoToken()) : null;
     FormatId formatId = new FormatId(format.getItag(), format.getLastModified(), format.getXtags());
 
     log.debug("Starting SABR track from client {} (itag {}): {}", client.getIdentifier(), format.getItag(), resolvedUrl);
@@ -291,7 +291,7 @@ public class YoutubeAudioTrack extends DelegatedAudioTrack {
     if (client.requirePlayerScript()) {
       resolvedUrl = sourceManager.getCipherManager()
               .resolveFormatUrl(httpInterface, formats.getPlayerScriptUrl(), format);
-      resolvedUrl = client.transformPlaybackUri(format.getUrl(), resolvedUrl);
+      resolvedUrl = client.transformPlaybackUri(format.getUrl(), resolvedUrl, formats.getPoToken());
     }
 
     return new FormatWithUrl(format, resolvedUrl);

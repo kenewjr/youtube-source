@@ -7,31 +7,106 @@ import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist;
 import dev.lavalink.youtube.OptionDisabledException;
+import dev.lavalink.youtube.RemotePoToken;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
+import dev.lavalink.youtube.clients.skeleton.StreamingNonMusicClient;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.apache.http.client.utils.URIBuilder;
 
-public class MWeb extends Web {
+public class MWeb extends StreamingNonMusicClient {
     public static ClientConfig BASE_CONFIG = new ClientConfig()
         .withClientName("MWEB")
         .withClientField("clientVersion", "2.20240726.11.00");
 //        .withUserAgent("Mozilla/5.0 (iPad; CPU OS 16_7_10 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1,gzip(gfe)");
 
+    protected ClientOptions options;
+    private volatile String poToken;
+
     public MWeb() {
-        super();
+        this(ClientOptions.DEFAULT);
     }
 
     public MWeb(@NotNull ClientOptions options) {
-        super(options);
+        this.options = options;
+    }
+
+    @Override
+    public boolean supportsSabrPlayback() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsFormatLoading() {
+        return getOptions().getPlayback();
+    }
+
+    @Override
+    public boolean canHandleRequest(@NotNull String identifier) {
+        return !identifier.startsWith(YoutubeAudioSourceManager.MUSIC_SEARCH_PREFIX);
     }
 
     @Override
     @NotNull
     public ClientConfig getBaseClientConfig(@NotNull HttpInterface httpInterface) {
-        return BASE_CONFIG.copy();
+        ClientConfig config = BASE_CONFIG.copy();
+        if (poToken != null) {
+            config.putOnceAndJoin(config.getRoot(), "serviceIntegrityDimensions").put("poToken", poToken);
+        }
+        return config;
+    }
+
+    @Override
+    public void preparePlayback(@NotNull YoutubeAudioSourceManager source,
+                                @NotNull HttpInterface httpInterface,
+                                @NotNull String videoId) throws IOException {
+        RemotePoToken.Result result = source.generatePoToken(httpInterface, videoId);
+        if (result != null) {
+            poToken = result.getPoToken();
+        }
+    }
+
+    @Override
+    @Nullable
+    public String getPoToken() {
+        return poToken;
+    }
+
+    @Override
+    @NotNull
+    public URI transformPlaybackUri(@NotNull URI originalUri,
+                                    @NotNull URI resolvedPlaybackUri,
+                                    @Nullable String token) {
+        if (token == null) {
+            return resolvedPlaybackUri;
+        }
+
+        try {
+            return new URIBuilder(resolvedPlaybackUri)
+                .addParameter("pot", token)
+                .build();
+        } catch (URISyntaxException e) {
+            return resolvedPlaybackUri;
+        }
+    }
+
+    @Override
+    @NotNull
+    public String getPlayerParams() {
+        return "2AMB";
+    }
+
+    @Override
+    @NotNull
+    public ClientOptions getOptions() {
+        return options;
     }
 
     @Override

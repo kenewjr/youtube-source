@@ -29,6 +29,11 @@ public class Tv extends StreamingNonMusicClient {
     }
 
     @Override
+    public boolean supportsSabrPlayback() {
+        return true;
+    }
+
+    @Override
     @NotNull
     protected ClientConfig getBaseClientConfig(@NotNull HttpInterface httpInterface) {
         return BASE_CONFIG.copy();
