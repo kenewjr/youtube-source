@@ -2,7 +2,6 @@ package dev.lavalink.youtube.sabr;
 
 import dev.lavalink.youtube.sabr.protobuf.ProtoReader;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Describes an upcoming media segment. Corresponds to {@code video_streaming.MediaHeader}.
@@ -53,8 +52,7 @@ public class MediaHeader {
     public static MediaHeader parse(@NotNull ProtoReader reader) {
         MediaHeader header = new MediaHeader();
 
-        int tag;
-        while ((tag = reader.readTag()) != -1) {
+        while (reader.readTag() != -1) {
             switch (reader.getFieldNumber()) {
                 case 1:
                     header.headerId = (int) reader.readVarint();
@@ -96,8 +94,7 @@ public class MediaHeader {
     }
 
     private static void parseTimeRange(@NotNull MediaHeader header, @NotNull ProtoReader reader) {
-        int tag;
-        while ((tag = reader.readTag()) != -1) {
+        while (reader.readTag() != -1) {
             switch (reader.getFieldNumber()) {
                 case 2:
                     header.timeRangeDurationTicks = reader.readVarint();

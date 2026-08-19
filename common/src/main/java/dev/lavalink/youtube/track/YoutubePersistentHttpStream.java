@@ -116,7 +116,7 @@ public class YoutubePersistentHttpStream extends PersistentHttpStream {
         }
 
         try {
-            return new URIBuilder(contentUrl).addParameter("range", position + "-" + rangeEnd).build();
+            return new URIBuilder(contentUrl).addParameter("range", position + "-" + (rangeEnd - 1)).build();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }

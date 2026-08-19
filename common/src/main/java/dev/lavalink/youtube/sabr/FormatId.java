@@ -53,8 +53,7 @@ public class FormatId {
         long lastModified = 0;
         String xtags = null;
 
-        int tag;
-        while ((tag = reader.readTag()) != -1) {
+        while (reader.readTag() != -1) {
             switch (reader.getFieldNumber()) {
                 case 1:
                     itag = (int) reader.readVarint();

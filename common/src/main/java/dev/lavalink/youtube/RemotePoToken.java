@@ -67,9 +67,6 @@ public final class RemotePoToken {
 
         try (CloseableHttpResponse response = httpInterface.execute(request)) {
             String responseBody = validateAndGetResponseBody(response);
-
-            log.debug("Received response from remote pot generator service: {}", responseBody);
-
             JsonBrowser json = JsonBrowser.parse(responseBody);
             String token = json.get("poToken").text();
 

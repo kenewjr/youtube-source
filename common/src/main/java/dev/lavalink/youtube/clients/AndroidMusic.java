@@ -40,11 +40,6 @@ public class AndroidMusic extends Android {
         return BASE_CONFIG.copy();
     }
 
-    @Override
-    @NotNull
-    public String getPlayerParams() {
-        return MOBILE_PLAYER_PARAMS;
-    }
 
     @Override
     @NotNull

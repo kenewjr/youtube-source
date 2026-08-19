@@ -350,8 +350,7 @@ public class SabrStream extends SeekableInputStream {
 
     private void handleNextRequestPolicy(@NotNull byte[] data) {
         ProtoReader reader = new ProtoReader(data);
-        int tag;
-        while ((tag = reader.readTag()) != -1) {
+        while (reader.readTag() != -1) {
             if (reader.getFieldNumber() == 7) {
                 // playback_cookie, stored as raw bytes to echo back in the next request.
                 playbackCookie = reader.readBytes();
@@ -363,15 +362,14 @@ public class SabrStream extends SeekableInputStream {
 
     private void handleSabrRedirect(@NotNull byte[] data) {
         ProtoReader reader = new ProtoReader(data);
-        int tag;
-        while ((tag = reader.readTag()) != -1) {
+        while (reader.readTag() != -1) {
             if (reader.getFieldNumber() == 1) {
                 String url = reader.readString();
                 try {
                     serverAbrStreamingUrl = new URI(url);
-                    log.debug("SABR redirect to {}", url);
+                    log.debug("SABR redirect received.");
                 } catch (URISyntaxException e) {
-                    log.warn("Received invalid SABR redirect URL: {}", url);
+                    log.warn("Received invalid SABR redirect URL.");
                 }
             } else {
                 reader.skip();
@@ -384,8 +382,7 @@ public class SabrStream extends SeekableInputStream {
         String errorType = null;
         int code = 0;
 
-        int tag;
-        while ((tag = reader.readTag()) != -1) {
+        while (reader.readTag() != -1) {
             switch (reader.getFieldNumber()) {
                 case 1:
                     errorType = reader.readString();
@@ -404,8 +401,7 @@ public class SabrStream extends SeekableInputStream {
 
     private void handleStreamProtectionStatus(@NotNull byte[] data) {
         ProtoReader reader = new ProtoReader(data);
-        int tag;
-        while ((tag = reader.readTag()) != -1) {
+        while (reader.readTag() != -1) {
             if (reader.getFieldNumber() == 1) {
                 streamProtectionStatus = (int) reader.readVarint();
             } else {
@@ -427,8 +423,7 @@ public class SabrStream extends SeekableInputStream {
         int writePolicy = 0;
         boolean sendByDefault = false;
 
-        int tag;
-        while ((tag = reader.readTag()) != -1) {
+        while (reader.readTag() != -1) {
             switch (reader.getFieldNumber()) {
                 case 1:
                     type = (int) reader.readVarint();
@@ -466,8 +461,7 @@ public class SabrStream extends SeekableInputStream {
 
     private void handleSabrContextSendingPolicy(@NotNull byte[] data) {
         ProtoReader reader = new ProtoReader(data);
-        int tag;
-        while ((tag = reader.readTag()) != -1) {
+        while (reader.readTag() != -1) {
             int value = (int) reader.readVarint();
             switch (reader.getFieldNumber()) {
                 case 1:

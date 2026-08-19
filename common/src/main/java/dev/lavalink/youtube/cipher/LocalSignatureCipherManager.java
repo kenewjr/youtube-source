@@ -1,7 +1,6 @@
 package dev.lavalink.youtube.cipher;
 
 import com.sedmelluq.discord.lavaplayer.tools.DataFormatTools;
-import com.sedmelluq.discord.lavaplayer.tools.ExceptionTools;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpClientTools;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
 import dev.lavalink.youtube.ExceptionWithResponseBody;
@@ -13,7 +12,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.util.EntityUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.mozilla.javascript.engine.RhinoScriptEngineFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,15 +25,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.sedmelluq.discord.lavaplayer.tools.ExceptionTools.throwWithDebugInfo;
 
@@ -80,14 +74,6 @@ public class LocalSignatureCipherManager implements CipherManager {
         Pattern.DOTALL
     );
 
-    // old?
-    private static final Pattern functionPatternOld = Pattern.compile(
-        "function\\(\\s*(\\w+)\\s*\\)\\s*\\{" +
-            "var\\s*(\\w+)=\\1\\[" + VARIABLE_PART + "\\[\\d+\\]\\]\\(" + VARIABLE_PART + "\\[\\d+\\]\\)" +
-            ".*?catch\\(\\s*(\\w+)\\s*\\)\\s*\\{" +
-            "\\s*return.*?\\+\\s*\\1\\s*}" +
-            "\\s*return\\s*\\2\\[" + VARIABLE_PART + "\\[\\d+\\]\\]\\(" + VARIABLE_PART + "\\[\\d+\\]\\)};",
-        Pattern.DOTALL);
 
     private final ConcurrentMap<String, SignatureCipher> cipherCache;
     private final Set<String> dumpedScriptUrls;
@@ -230,12 +216,6 @@ public class LocalSignatureCipherManager implements CipherManager {
         }
     }
 
-    private List<String> getQuotedFunctions(@Nullable String... functionNames) {
-        return Stream.of(functionNames)
-            .filter(Objects::nonNull)
-            .map(Pattern::quote)
-            .collect(Collectors.toList());
-    }
 
     private void dumpProblematicScript(@NotNull String script, @NotNull String sourceUrl,
                                        @NotNull String issue) {

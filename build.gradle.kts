@@ -2,11 +2,12 @@ import org.ajoberstar.grgit.Grgit
 
 plugins {
     java
-    id("org.ajoberstar.grgit") version "5.2.0"
+    id("org.ajoberstar.grgit") version "5.3.2"
     alias(libs.plugins.maven.publish.base) apply false
 }
 
-val (gitVersion, release) = versionFromGit()
+val versionOverride = providers.gradleProperty("versionOverride").orNull
+val (gitVersion, release) = versionOverride?.let { it to !it.endsWith("-SNAPSHOT") } ?: versionFromGit()
 logger.lifecycle("Version: $gitVersion (release: $release)")
 
 allprojects {
@@ -36,8 +37,8 @@ subprojects {
     }
 
     configure<JavaPluginExtension> {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     configure<PublishingExtension> {

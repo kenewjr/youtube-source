@@ -12,7 +12,7 @@ lavalinkPlugin {
     name = "youtube-plugin"
     path = "dev.lavalink.youtube.plugin"
     apiVersion = libs.versions.lavalink
-    serverVersion = "4.0.7"
+    serverVersion = libs.versions.lavalink.get()
     configurePublishing = false
 }
 
@@ -30,13 +30,14 @@ dependencies {
     compileOnly(libs.slf4j)
     compileOnly(libs.annotations)
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0-M1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0-M1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.0")
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 mavenPublishing {
@@ -45,7 +46,8 @@ mavenPublishing {
 }
 
 tasks.jar {
-    dependsOn(":common:compileTestJava")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn(":common:compileTestJava", ":common:jar", ":v2:jar")
 }
 
 tasks {

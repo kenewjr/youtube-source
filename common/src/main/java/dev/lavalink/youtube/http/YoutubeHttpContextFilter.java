@@ -11,14 +11,10 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static dev.lavalink.youtube.http.YoutubeOauth2Handler.OAUTH_INJECT_CONTEXT_ATTRIBUTE;
 
 public class YoutubeHttpContextFilter extends BaseYoutubeHttpContextFilter {
-  private static final Logger log = LoggerFactory.getLogger(YoutubeHttpContextFilter.class);
-
   private static final String ATTRIBUTE_RESET_RETRY = "isResetRetry";
   public static final String ATTRIBUTE_USER_AGENT_SPECIFIED = "clientUserAgent";
   public static final String ATTRIBUTE_VISITOR_DATA_SPECIFIED = "clientVisitorData";

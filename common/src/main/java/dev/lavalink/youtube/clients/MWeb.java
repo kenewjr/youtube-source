@@ -2,11 +2,7 @@ package dev.lavalink.youtube.clients;
 
 import com.sedmelluq.discord.lavaplayer.tools.JsonBrowser;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
-import com.sedmelluq.discord.lavaplayer.track.AudioItem;
-import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist;
-import dev.lavalink.youtube.OptionDisabledException;
 import dev.lavalink.youtube.RemotePoToken;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import dev.lavalink.youtube.clients.skeleton.StreamingNonMusicClient;

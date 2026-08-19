@@ -1,8 +1,6 @@
 package dev.lavalink.youtube.cipher;
 
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -12,8 +10,6 @@ import javax.script.ScriptException;
  * Describes one signature cipher
  */
 public class SignatureCipher {
-    private static final Logger log = LoggerFactory.getLogger(SignatureCipher.class);
-
     public final String timestamp;
     public final String globalVars;
     public final String sigActions;

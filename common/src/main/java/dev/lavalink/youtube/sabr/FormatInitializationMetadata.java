@@ -39,8 +39,7 @@ public class FormatInitializationMetadata {
     public static FormatInitializationMetadata parse(@NotNull ProtoReader reader) {
         FormatInitializationMetadata metadata = new FormatInitializationMetadata();
 
-        int tag;
-        while ((tag = reader.readTag()) != -1) {
+        while (reader.readTag() != -1) {
             switch (reader.getFieldNumber()) {
                 case 1:
                     metadata.videoId = reader.readString();

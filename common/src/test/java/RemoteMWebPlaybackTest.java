@@ -7,6 +7,7 @@ import dev.lavalink.youtube.track.format.StreamFormat;
 import dev.lavalink.youtube.track.format.TrackFormats;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 
@@ -17,17 +18,19 @@ import java.net.URI;
  */
 public class RemoteMWebPlaybackTest {
     private static final String Id = "iiEt0wrFehA";
-    private static final String RemotePotBase = "http://localhost:8080";
+    private static final String RemotePotBase = System.getenv().getOrDefault("WEBPO_URL", "http://127.0.0.1:8080");
+    private static final String RemotePotPassword = System.getenv("WEBPO_TOKEN");
     private static final String CipherUrl = "https://cipher.kikkia.dev/";
     private static final String AGENT = "cipher/1.0";
 
     @Test
+    @EnabledIfEnvironmentVariable(named = "YOUTUBE_REMOTE_PLAYBACK_TEST", matches = "true")
     public void testMWebPlaybackUrl() throws Throwable {
 
         Client client = new MWeb();
 
         YoutubeSourceOptions options = new YoutubeSourceOptions()
-            .setRemotePoToken(RemotePotBase, null)
+            .setRemotePoToken(RemotePotBase, RemotePotPassword)
             .setRemoteCipher(CipherUrl, null, AGENT);
         YoutubeAudioSourceManager source = new YoutubeAudioSourceManager(options, client);
 
@@ -61,8 +64,6 @@ public class RemoteMWebPlaybackTest {
                 int statusCode = response.getStatusLine().getStatusCode();
                 Assertions.assertTrue(statusCode == 200 || statusCode == 206, "Resolved MWEB URL was not playable; status code: " + statusCode);
             }
-
-            System.out.println("Resolved MWEB playback URL: " + playableUrl);
         }
     }
 
