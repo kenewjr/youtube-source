@@ -59,6 +59,22 @@ subprojects {
         } else {
             logger.lifecycle("Not publishing to maven.lavalink.dev because credentials are not set")
         }
+
+        val gprUser = findProperty("GPR_USER") as String? ?: System.getenv("GITHUB_ACTOR")
+        val gprKey = findProperty("GPR_KEY") as String? ?: System.getenv("GITHUB_TOKEN")
+        val gprRepo = System.getenv("GITHUB_REPOSITORY") ?: "kenewjr/youtube-source"
+        if (!gprUser.isNullOrEmpty() && !gprKey.isNullOrEmpty()) {
+            repositories {
+                maven {
+                    name = "GitHubPackages"
+                    url = uri("https://maven.pkg.github.com/$gprRepo")
+                    credentials {
+                        username = gprUser
+                        password = gprKey
+                    }
+                }
+            }
+        }
     }
 }
 

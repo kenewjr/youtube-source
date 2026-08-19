@@ -7,13 +7,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class Ios extends StreamingNonMusicClient {
-    public static String CLIENT_VERSION = "21.02.3";
+    public static String CLIENT_VERSION = "21.32.4";
 
     public static ClientConfig BASE_CONFIG = new ClientConfig()
-        .withUserAgent(String.format("com.google.ios.youtube/%s (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)", CLIENT_VERSION))
-        .withClientName("IOS")
-        .withClientField("clientVersion", CLIENT_VERSION)
-        .withUserField("lockedSafetyMode", false);
+            .withUserAgent(String.format("com.google.ios.youtube/%s (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)",
+                    CLIENT_VERSION))
+            .withClientName("IOS")
+            .withClientField("clientVersion", CLIENT_VERSION)
+            .withUserField("lockedSafetyMode", false);
 
     protected ClientOptions options;
 
@@ -35,18 +36,18 @@ public class Ios extends StreamingNonMusicClient {
     @NotNull
     protected JsonBrowser extractPlaylistVideoList(@NotNull JsonBrowser json) {
         return json.get("contents")
-            .get("singleColumnBrowseResultsRenderer")
-            .get("tabs")
-            .index(0)
-            .get("tabRenderer")
-            .get("content")
-            .get("sectionListRenderer")
-            .get("contents")
-            .index(0)
-            .get("itemSectionRenderer")
-            .get("contents")
-            .index(0)
-            .get("playlistVideoListRenderer");
+                .get("singleColumnBrowseResultsRenderer")
+                .get("tabs")
+                .index(0)
+                .get("tabRenderer")
+                .get("content")
+                .get("sectionListRenderer")
+                .get("contents")
+                .index(0)
+                .get("itemSectionRenderer")
+                .get("contents")
+                .index(0)
+                .get("playlistVideoListRenderer");
     }
 
     @Override
@@ -59,9 +60,9 @@ public class Ios extends StreamingNonMusicClient {
     }
 
     @Override
-    @Nullable
+    @NotNull
     public String getPlayerParams() {
-        return null;
+        return WEB_PLAYER_PARAMS;
     }
 
     @Override

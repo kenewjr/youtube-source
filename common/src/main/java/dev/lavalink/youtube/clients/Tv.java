@@ -14,9 +14,10 @@ import java.io.IOException;
 
 public class Tv extends StreamingNonMusicClient {
     public static ClientConfig BASE_CONFIG = new ClientConfig()
-        .withClientName("TVHTML5")
-        .withUserAgent("Mozilla/5.0 (ChromiumStylePlatform) Cobalt/Version")
-        .withClientField("clientVersion", "7.20250319.10.00");
+            .withClientName("TVHTML5")
+            .withUserAgent(
+                    "Mozilla/5.0 (PlayStation; PlayStation 4/12.00) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15")
+            .withClientField("clientVersion", "7.20250319.10.00");
 
     protected ClientOptions options;
 
@@ -69,28 +70,31 @@ public class Tv extends StreamingNonMusicClient {
 
     @Override
     public AudioItem loadPlaylist(@NotNull YoutubeAudioSourceManager source,
-                                  @NotNull HttpInterface httpInterface,
-                                  @NotNull String playlistId,
-                                  @Nullable String selectedVideoId) {
+            @NotNull HttpInterface httpInterface,
+            @NotNull String playlistId,
+            @Nullable String selectedVideoId) {
         throw new FriendlyException("This client cannot load playlists", Severity.COMMON,
-            new RuntimeException("TVHTML5 cannot be used to load playlists"));
+                new RuntimeException("TVHTML5 cannot be used to load playlists"));
     }
 
     @Override
-    public AudioItem loadVideo(@NotNull YoutubeAudioSourceManager source, @NotNull HttpInterface httpInterface, @NotNull String videoId) throws CannotBeLoaded, IOException {
+    public AudioItem loadVideo(@NotNull YoutubeAudioSourceManager source, @NotNull HttpInterface httpInterface,
+            @NotNull String videoId) throws CannotBeLoaded, IOException {
         throw new FriendlyException("This client cannot load videos", Severity.COMMON,
-            new RuntimeException("TVHTML5 cannot be used to load videos"));
+                new RuntimeException("TVHTML5 cannot be used to load videos"));
     }
 
     @Override
-    public AudioItem loadMix(@NotNull YoutubeAudioSourceManager source, @NotNull HttpInterface httpInterface, @NotNull String mixId, @Nullable String selectedVideoId) {
+    public AudioItem loadMix(@NotNull YoutubeAudioSourceManager source, @NotNull HttpInterface httpInterface,
+            @NotNull String mixId, @Nullable String selectedVideoId) {
         throw new FriendlyException("This client cannot load mixes", Severity.COMMON,
-            new RuntimeException("TVHTML5 cannot be used to load mixes"));
+                new RuntimeException("TVHTML5 cannot be used to load mixes"));
     }
 
     @Override
-    public AudioItem loadSearch(@NotNull YoutubeAudioSourceManager source, @NotNull HttpInterface httpInterface, @NotNull String searchQuery) {
+    public AudioItem loadSearch(@NotNull YoutubeAudioSourceManager source, @NotNull HttpInterface httpInterface,
+            @NotNull String searchQuery) {
         throw new FriendlyException("This client cannot search", Severity.COMMON,
-            new RuntimeException("TVHTML5 cannot be used to search"));
+                new RuntimeException("TVHTML5 cannot be used to search"));
     }
 }

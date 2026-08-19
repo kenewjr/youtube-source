@@ -1,80 +1,163 @@
-name: Publish
+name: Build and Release Plugin
+
 on:
   push:
+    tags:
+      - 'v*'
   release:
     types: [ published ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 1.18.3)'
+        required: false
+        default: '1.18.3'
+      create_release:
+        description: 'Create/Update GitHub Release with artifacts'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
+    name: Build Plugin JARs
     runs-on: ubuntu-latest
-    env:
-      MAVEN_USERNAME: ${{ vars.MAVEN_USERNAME }}
-      MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Java
+      - name: Determine Version
+        id: get_version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF_NAME}"
+          else
+            VERSION="1.18.3"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Building version: ${VERSION}"
+
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: zulu
+          distribution: 'zulu'
           java-version: 17
-          cache: gradle
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build and Publish
-        run: ./gradlew build publish --no-daemon -PMAVEN_USERNAME=$MAVEN_USERNAME -PMAVEN_PASSWORD=$MAVEN_PASSWORD
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-      - name: Upload common Artifact
+      - name: Build and Publish Maven Packages
+        env:
+          GPR_USER: ${{ github.actor }}
+          GPR_KEY: ${{ secrets.GITHUB_TOKEN }}
+          MAVEN_USERNAME: ${{ vars.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        run: |
+          ./gradlew clean assemble build -PversionOverride=${{ steps.get_version.outputs.VERSION }} --no-daemon
+          ./gradlew publish -PversionOverride=${{ steps.get_version.outputs.VERSION }} --no-daemon || echo "Skipping external maven publish if credentials unconfigured"
+
+      - name: Prepare Artifacts & Checksums
+        id: prep_artifacts
+        run: |
+          mkdir -p dist
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+
+          # Copy built JARs to distribution folder
+          find plugin/build/libs -name "*.jar" ! -name "*-sources.jar" -exec cp {} dist/youtube-plugin-${VERSION}.jar \;
+          cp dist/youtube-plugin-${VERSION}.jar dist/youtube-plugin.jar
+          find v2/build/libs -name "*.jar" ! -name "*-sources.jar" -exec cp {} dist/youtube-v2-${VERSION}.jar \;
+          find common/build/libs -name "*.jar" ! -name "*-sources.jar" -exec cp {} dist/youtube-common-${VERSION}.jar \;
+
+          # Generate SHA-256 Checksums
+          cd dist
+          sha256sum *.jar > checksums.txt
+          cat checksums.txt
+          cd ..
+
+      - name: Upload Workflow Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: youtube-common.jar
-          path: common/build/libs/youtube-common-*.jar
-
-      - name: Upload lldevs Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: youtube-v2.jar
-          path: v2/build/libs/youtube-v2-*.jar
-
-      - name: Upload plugin Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: youtube-plugin.jar
-          path: plugin/build/libs/youtube-plugin-*.jar
+          name: youtube-plugin-release-${{ steps.get_version.outputs.VERSION }}
+          path: dist/*
+          retention-days: 90
 
   release:
+    name: Publish GitHub Release
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'release'
+    if: |
+      github.event_name == 'release' ||
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event.inputs.create_release == 'true'
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download youtube-common Artifact
+      - name: Determine Tag Name
+        id: tag_info
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            TAG="v${{ github.event.inputs.version }}"
+            VER="${{ github.event.inputs.version }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+            VER="${GITHUB_REF_NAME#v}"
+          else
+            TAG="v1.18.3"
+            VER="1.18.3"
+          fi
+          echo "TAG_NAME=${TAG}" >> $GITHUB_OUTPUT
+          echo "VERSION=${VER}" >> $GITHUB_OUTPUT
+
+      - name: Download Built Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: youtube-common.jar
+          name: youtube-plugin-release-${{ steps.tag_info.outputs.VERSION }}
+          path: release-assets
 
-      - name: Download youtube-v2 Artifact
-        uses: actions/download-artifact@v4
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: youtube-v2.jar
+          tag_name: ${{ steps.tag_info.outputs.TAG_NAME }}
+          name: "YouTube Source Plugin ${{ steps.tag_info.outputs.TAG_NAME }}"
+          body: |
+            ### YouTube Source Plugin for Lavalink (v${{ steps.tag_info.outputs.VERSION }})
 
-      - name: Download youtube-plugin Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: youtube-plugin.jar
+            Enhanced YouTube audio source plugin with:
+            - **InnerTube Android `21.02.35`** & **iOS `21.32.4`** client updates.
+            - **Modern YouTube Playlist Pagination** (Full 400+ tracks loading support).
+            - **SABR Stream** + **Remote PoToken** integration.
 
-      - name: Upload Artifacts to GitHub Release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: '*.jar'
-          allowUpdates: true
-          omitBodyDuringUpdate: true
-          omitDraftDuringUpdate: true
-          omitNameDuringUpdate: true
-          omitPrereleaseDuringUpdate: true
+            #### How to Use in Lavalink `application.yml`
+
+            ##### Option 1: Direct Download into `plugins/`
+            Download `youtube-plugin-${{ steps.tag_info.outputs.VERSION }}.jar` (or `youtube-plugin.jar`) and place it inside your Lavalink `./plugins/` directory.
+
+            ##### Option 2: Lavalink Plugin Manager (JitPack)
+            ```yaml
+            lavalink:
+              plugins:
+                - dependency: "com.github.${{ github.repository_owner }}.youtube-source:plugin:${{ steps.tag_info.outputs.VERSION }}"
+                  repository: "https://jitpack.io"
+            ```
+
+            #### Checksums
+            See `checksums.txt` attached below for SHA-256 validation.
+          files: |
+            release-assets/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

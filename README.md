@@ -5,6 +5,50 @@ This source aims to provide robustness by leveraging multiple InnerTube clients
 for requests. Where one client fails, another will try to load the request.
 Which clients are used is entirely configurable.
 
+## 🚀 Quick Start for Lavalink Users
+
+### Option 1: Direct JAR Download (Recommended)
+1. Download the latest `youtube-plugin-1.18.3.jar` (or `youtube-plugin.jar`) from [Releases](https://github.com/kenewjr/youtube-source/releases).
+2. Place the `.jar` file into your Lavalink `./plugins/` directory.
+3. Start Lavalink.
+
+### Option 2: Automatic Plugin Download (via JitPack in `application.yml`)
+Add the following to your `application.yml`:
+```yaml
+lavalink:
+  plugins:
+    - dependency: "com.github.kenewjr.youtube-source:plugin:1.18.3"
+      repository: "https://jitpack.io"
+```
+
+### ⚙️ Recommended `application.yml` Configuration
+```yaml
+lavalink:
+  server:
+    sources:
+      youtube: false # Disable Lavalink's deprecated built-in YouTube source
+
+plugins:
+  youtube:
+    enabled: true
+    allowSearch: true
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    remotePot:
+      url: "http://127.0.0.1:8080" # URL of your local/remote WebPO generator
+      pass: ""
+    remoteCipher:
+      url: "https://cipher.kikkia.dev/"
+    clients:
+      - WEB
+      - MUSIC
+      - IOS
+      - ANDROID_MUSIC
+      - ANDROID_VR
+      - TV
+      - MWEB
+```
+
 ## Table of Contents
 - [Common](#common)
   - Information about the `common` module and usage of.
