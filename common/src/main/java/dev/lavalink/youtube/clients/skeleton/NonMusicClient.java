@@ -365,18 +365,69 @@ public abstract class NonMusicClient implements Client {
 
         for (JsonBrowser track : json.values()) {
             JsonBrowser item = track.get("playlistVideoRenderer");
-            JsonBrowser authorJson = item.get("shortBylineText");
 
-            // isPlayable is null -> video has been removed/blocked
-            // author is null -> video is region blocked
-            if (!item.get("isPlayable").isNull() && !authorJson.isNull()) {
-                String videoId = item.get("videoId").text();
-                JsonBrowser titleField = item.get("title");
-                String title = DataFormatTools.defaultOnNull(titleField.get("simpleText").text(), titleField.get("runs").index(0).get("text").text());
-                String author = DataFormatTools.defaultOnNull(authorJson.get("runs").index(0).get("text").text(), "Unknown artist");
-                long duration = Units.secondsToMillis(item.get("lengthSeconds").asLong(Units.DURATION_SEC_UNKNOWN));
-                tracks.add(buildAudioTrack(source, item, title, author, duration, videoId, false));
+            if (!item.isNull()) {
+                JsonBrowser authorJson = item.get("shortBylineText");
+
+                // isPlayable is null -> video has been removed/blocked
+                // author is null -> video is region blocked
+                if (!item.get("isPlayable").isNull() && !authorJson.isNull()) {
+                    String videoId = item.get("videoId").text();
+                    JsonBrowser titleField = item.get("title");
+                    String title = DataFormatTools.defaultOnNull(titleField.get("simpleText").text(), titleField.get("runs").index(0).get("text").text());
+                    String author = DataFormatTools.defaultOnNull(authorJson.get("runs").index(0).get("text").text(), "Unknown artist");
+                    long duration = Units.secondsToMillis(item.get("lengthSeconds").asLong(Units.DURATION_SEC_UNKNOWN));
+                    tracks.add(buildAudioTrack(source, item, title, author, duration, videoId, false));
+                }
+
+                continue;
             }
+
+            JsonBrowser lockup = track.get("lockupViewModel");
+            if (!"LOCKUP_CONTENT_TYPE_VIDEO".equals(lockup.get("contentType").text())) {
+                continue;
+            }
+
+            String videoId = lockup.get("contentId").text();
+            JsonBrowser metadata = lockup.get("metadata").get("lockupMetadataViewModel");
+            String title = metadata.get("title").get("content").text();
+            String author = metadata.get("metadata")
+                .get("contentMetadataViewModel")
+                .get("metadataRows")
+                .index(0)
+                .get("metadataParts")
+                .index(0)
+                .get("text")
+                .get("content")
+                .text();
+
+            if (DataFormatTools.isNullOrEmpty(videoId) || DataFormatTools.isNullOrEmpty(title)) {
+                continue;
+            }
+
+            String durationText = lockup.get("contentImage")
+                .get("thumbnailViewModel")
+                .get("overlays")
+                .index(0)
+                .get("thumbnailBottomOverlayViewModel")
+                .get("badges")
+                .index(0)
+                .get("thumbnailBadgeViewModel")
+                .get("text")
+                .text();
+            long duration = DataFormatTools.isNullOrEmpty(durationText)
+                ? Units.DURATION_MS_UNKNOWN
+                : DataFormatTools.durationTextToMillis(durationText);
+
+            tracks.add(buildAudioTrack(
+                source,
+                lockup,
+                title,
+                DataFormatTools.defaultOnNull(author, "Unknown artist"),
+                duration,
+                videoId,
+                false
+            ));
         }
     }
 

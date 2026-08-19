@@ -172,7 +172,7 @@ public class Web extends StreamingNonMusicClient {
 
     @NotNull
     protected JsonBrowser extractPlaylistVideoList(@NotNull JsonBrowser json) {
-        return json.get("contents")
+        JsonBrowser contents = json.get("contents")
                 .get("twoColumnBrowseResultsRenderer")
                 .get("tabs")
                 .index(0)
@@ -182,9 +182,10 @@ public class Web extends StreamingNonMusicClient {
                 .get("contents")
                 .index(0)
                 .get("itemSectionRenderer")
-                .get("contents")
-                .index(0)
-                .get("playlistVideoListRenderer");
+                .get("contents");
+        JsonBrowser legacyVideoList = contents.index(0).get("playlistVideoListRenderer");
+
+        return legacyVideoList.isNull() ? contents : legacyVideoList;
     }
 
     @Override
@@ -197,7 +198,7 @@ public class Web extends StreamingNonMusicClient {
             videoList = contents;
         }
 
-        return videoList.values()
+        String legacyToken = videoList.values()
                 .stream()
                 .filter(item -> !item.get("continuationItemRenderer").isNull())
                 .findFirst()
@@ -211,6 +212,22 @@ public class Web extends StreamingNonMusicClient {
                     return continuationEndpoint.get("commandExecutorCommand").get("commands").index(1)
                             .get("continuationCommand").get("token").text();
                 })
+                .orElse(null);
+
+        if (!DataFormatTools.isNullOrEmpty(legacyToken)) {
+            return legacyToken;
+        }
+
+        return videoList.values()
+                .stream()
+                .map(item -> item.get("continuationItemViewModel")
+                        .get("continuationCommand")
+                        .get("innertubeCommand")
+                        .get("continuationCommand")
+                        .get("token")
+                        .text())
+                .filter(token -> !DataFormatTools.isNullOrEmpty(token))
+                .findFirst()
                 .orElse(null);
     }
 
